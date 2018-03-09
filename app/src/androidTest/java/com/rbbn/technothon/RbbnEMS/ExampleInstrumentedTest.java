@@ -1,4 +1,4 @@
-package com.rbbn.technothon.testlogin;
+package com.rbbn.technothon.RbbnEMS;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

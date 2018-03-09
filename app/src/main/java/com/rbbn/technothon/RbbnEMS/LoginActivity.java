@@ -1,38 +1,33 @@
-package com.rbbn.technothon.testlogin;
+package com.rbbn.technothon.RbbnEMS;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
 
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 
-import static android.Manifest.permission.READ_CONTACTS;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A login screen that offers login via email/password.
@@ -62,6 +57,9 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mEMSIpview;
     private View mProgressView;
     private View mLoginFormView;
+    private String launchURL;
+    private String getAuthURL;
+    private String logonURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,17 +70,9 @@ public class LoginActivity extends AppCompatActivity {
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mEMSIpview = (EditText) findViewById(R.id.ems_ip);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
-                }
-                return false;
-            }
-        });
-
+        launchURL = getResources().getString(R.string.launch_url);
+        getAuthURL = getResources().getString(R.string.auth_session);
+        logonURL = getResources().getString(R.string.security_url);
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -113,9 +103,9 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView.setError(null);
         mEMSIpview.setError(null);
         // Store values at the time of the login attempt.
-        String emsIP = mEMSIpview.getText().toString();
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        final String emsIP = mEMSIpview.getText().toString();
+        final String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -146,9 +136,40 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(emsIP, email, password);
-            mAuthTask.execute((Void) null);
+//            showProgress(true);
+//            mAuthTask = new UserLoginTask(emsIP, email, password);
+//            mAuthTask.execute((Void) null);
+            Toast.makeText(LoginActivity.this, "https://" + emsIP + launchURL, Toast.LENGTH_LONG).show();
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://" + emsIP + logonURL,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            Toast.makeText(LoginActivity.this, "Response is: " + response.substring(0, 500).toString(), Toast.LENGTH_LONG).show();
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("abhsihek", error.toString());
+                    Toast.makeText(LoginActivity.this, "Error is: " + error.toString(), Toast.LENGTH_LONG).show();
+                }
+
+                public String getBodyContentType() {
+                    return "application/x-www-form-urlencoded; charset=UTF-8";
+                }
+
+
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("j_username", email.trim());
+                    params.put("j_password", password.trim());
+                    params.put("j_security_check", "+Log+In+");
+                    return params;
+                }
+
+            });
+            MySingleton.getInstance(this).addToRequestQueue(stringRequest);
+
         }
     }
 

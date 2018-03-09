@@ -1,4 +1,4 @@
-package com.rbbn.technothon.testlogin;
+package com.rbbn.technothon.RbbnEMS;
 
 import org.junit.Test;
 
