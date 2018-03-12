@@ -15,6 +15,7 @@
         completions."
     </string>
     <string name="launch_url">/coreGui/ui/logon/launch.jsp</string>
+    <string name="logon_url">/coreGui/ui/logon/</string>
     <string name="security_url">/coreGui/ui/logon/j_security_check</string>
     <string name="auth_session">/emxAuth/auth/getAuthSession</string>
 </resources>
