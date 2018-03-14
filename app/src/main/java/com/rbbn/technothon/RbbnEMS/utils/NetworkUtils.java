@@ -1,5 +1,6 @@
-package com.rbbn.technothon.RbbnEMS;
+package com.rbbn.technothon.RbbnEMS.utils;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 
 import com.android.volley.Request;
@@ -20,22 +21,25 @@ import javax.net.ssl.X509TrustManager;
  * Created by aaagarwal on 09-03-2018.
  */
 
-public class MySingleton {
-    private static MySingleton mInstance;
+public class NetworkUtils {
+    private static NetworkUtils mInstance;
     private RequestQueue mRequestQueue;
-
+    private static ProgressDialog pDialog;
     private static Context mCtx;
 
-    private MySingleton(Context context) {
+    private NetworkUtils(Context context) {
         mCtx = context;
         mRequestQueue = getRequestQueue();
 
     }
 
-    public static synchronized MySingleton getInstance(Context context) {
+    public static synchronized NetworkUtils getInstance(Context context) {
         if (mInstance == null) {
-            mInstance = new MySingleton(context);
+            mInstance = new NetworkUtils(context);
             new NukeSSLCerts().nuke();
+            pDialog = new ProgressDialog(context);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
         }
         return mInstance;
     }
@@ -49,9 +53,16 @@ public class MySingleton {
         return mRequestQueue;
     }
 
+    public void cancelPendingRequests(Object tag) {
+        if (mRequestQueue != null) {
+            mRequestQueue.cancelAll(tag);
+        }
+    }
+
     public <T> void addToRequestQueue(Request<T> req) {
         getRequestQueue().add(req);
     }
+
 
     public static class NukeSSLCerts {
         protected static final String TAG = "NukeSSLCerts";
@@ -87,6 +98,16 @@ public class MySingleton {
             } catch (Exception e) {
             }
         }
+    }
+
+    public void showpDialog() {
+        if (!pDialog.isShowing())
+            pDialog.show();
+    }
+
+    public void hidepDialog() {
+        if (pDialog.isShowing())
+            pDialog.dismiss();
     }
 
 }
