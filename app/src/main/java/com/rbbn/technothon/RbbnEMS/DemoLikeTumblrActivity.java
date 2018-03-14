@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
@@ -19,7 +20,9 @@ import android.widget.Toast;
 
 import com.ogaclejapan.arclayout.ArcLayout;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DemoLikeTumblrActivity extends AppCompatActivity implements View.OnClickListener {
@@ -27,15 +30,16 @@ public class DemoLikeTumblrActivity extends AppCompatActivity implements View.On
     Toast toast = null;
     ClipRevealFrame menuLayout;
     ArcLayout arcLayout;
-    View centerItem;
+    Button centerItem;
     public static final String EXTRA_CIRCULAR_REVEAL_X = "EXTRA_CIRCULAR_REVEAL_X";
     public static final String EXTRA_CIRCULAR_REVEAL_Y = "EXTRA_CIRCULAR_REVEAL_Y";
     View rootLayout;
     private int revealX;
     private int revealY;
+    private String emsIp;
 
-    String[] nodeList;
-    String[] drawables = {"round_button_blue", "round_button_green", "round_button_blue", "round_button_grey", "round_button_orange", "round_button_white"};
+    List<String> nodeList;
+    String[] drawables = {"round_button_blue", "round_button_green", "round_button_blue", "round_button_grey", "round_button_orange"};
 
     //    public static void startActivity(Context context, Demo demo) {
 //        Intent intent = new Intent(context, DemoLikeTumblrActivity.class);
@@ -53,8 +57,8 @@ public class DemoLikeTumblrActivity extends AppCompatActivity implements View.On
         rootLayout = findViewById(R.id.root_layout);
         menuLayout = (ClipRevealFrame) findViewById(R.id.menu_layout);
         arcLayout = (ArcLayout) findViewById(R.id.arc_layout);
-        nodeList = getResources().getStringArray(R.array.node_list);
-        centerItem = findViewById(R.id.center_item);
+//        nodeList = Arrays.asList(getResources().getStringArray(R.array.node_list));
+        centerItem = (Button) findViewById(R.id.center_item);
         final Intent intent = getIntent();
         final float scale = this.getResources().getDisplayMetrics().density;
 
@@ -65,7 +69,9 @@ public class DemoLikeTumblrActivity extends AppCompatActivity implements View.On
 
             revealX = intent.getIntExtra(EXTRA_CIRCULAR_REVEAL_X, 0);
             revealY = intent.getIntExtra(EXTRA_CIRCULAR_REVEAL_Y, 0);
-
+            nodeList = intent.getStringArrayListExtra("NodeData");
+            emsIp = intent.getStringExtra("EMSIP");
+            Log.d("Abhishek", nodeList.toString());
 
             ViewTreeObserver viewTreeObserver = rootLayout.getViewTreeObserver();
             if (viewTreeObserver.isAlive()) {
@@ -82,9 +88,10 @@ public class DemoLikeTumblrActivity extends AppCompatActivity implements View.On
         }
         int size_pixels = (int) (100 * scale + 0.5f);
         int padding_pixels = (int) (20 * scale + 0.5f);
-        for (int i = 0; i < nodeList.length; i++) {
+        centerItem.setText(emsIp);
+        for (int i = 0; i < nodeList.size(); i++) {
             Button emsbttn = new Button(new ContextThemeWrapper(this, R.style.Item_RoundCircle), null, 0);
-            emsbttn.setText(nodeList[i]);
+            emsbttn.setText(nodeList.get(i));
             emsbttn.setTextSize(getResources().getDimension(R.dimen.item_font_size_wheel));
             emsbttn.setWidth(size_pixels);
             emsbttn.setHeight(size_pixels);

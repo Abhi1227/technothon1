@@ -11,6 +11,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
+import com.rbbn.technothon.RbbnEMS.LoginActivity;
 import com.rbbn.technothon.RbbnEMS.R;
 
 import org.json.JSONArray;
@@ -75,7 +76,7 @@ public class PerformNetworkOperations {
 //                            showProgress(false);
                         // error
                         NetworkUtils.getInstance(ctx).hidepDialog();
-                        Log.d("Abhishek", String.valueOf(error.networkResponse.statusCode));
+//                        Log.d("Abhishek", String.valueOf(error.networkResponse.statusCode));
                         Toast.makeText(ctx, "Invalid UserName or Password", Toast.LENGTH_LONG).show();
 
                     }
@@ -99,7 +100,59 @@ public class PerformNetworkOperations {
 
     }
 
-    public List<String> getNodesList(String emsIp, final String mytoken) {
+    public List<String> getNodesList(final String emsIp, final String mytoken) {
+        String getNodesUrl = gethttpsURL(emsIp, fetchNodesURL);
+
+        StringRequest nodeRequest = new StringRequest(Request.Method.GET, getNodesUrl,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        Log.d("Abhishek", response);
+                        try {
+                            NetworkUtils.getInstance(ctx).hidepDialog();
+                            List<String> myList = new ArrayList<String>();
+                            JSONObject responseJson = new JSONObject(response);
+                            JSONArray myresponse = responseJson.getJSONArray("nodes");
+                            for (int i = 0; i < myresponse.length(); i++) {
+                                JSONObject jsonObject = myresponse.getJSONObject(i);
+                                myList.add(jsonObject.getString("name"));
+                                Log.d("Abhishek", myList.toString());
+                            }
+                            LoginActivity.getInstance().navigateActivity(myList, emsIp);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+//                            showProgress(false);
+                        // error
+//                        Log.d("Abhishek", String.valueOf(error.networkResponse.statusCode));
+                        NetworkUtils.getInstance(ctx).hidepDialog();
+                        Toast.makeText(ctx, "Unable to get Node list", Toast.LENGTH_LONG).show();
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Authorization", mytoken);
+                return params;
+            }
+        };
+
+        NetworkUtils.getInstance(ctx).showpDialog();
+        // Adding request to request queue
+        NetworkUtils.getInstance(ctx).addToRequestQueue(nodeRequest);
+        return null;
+    }
+
+
+    public List<String> getEmsList(final String emsIp, final String mytoken) {
         String getNodesUrl = gethttpsURL(emsIp, fetchNodesURL);
 
         StringRequest nodeRequest = new StringRequest(Request.Method.GET, getNodesUrl,
@@ -116,6 +169,7 @@ public class PerformNetworkOperations {
                                 JSONObject jsonObject = myresponse.getJSONObject(i);
                                 myList.add(jsonObject.getString("name"));
                                 Log.d("Abhishek", myList.toString());
+                                LoginActivity.getInstance().navigateActivity(myList, emsIp);
                             }
 
                         } catch (JSONException e) {

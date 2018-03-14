@@ -3,9 +3,12 @@ package com.rbbn.technothon.RbbnEMS;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,6 +20,8 @@ import android.widget.Toast;
 
 import com.rbbn.technothon.RbbnEMS.utils.PerformNetworkOperations;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -40,8 +45,6 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
-
     // UI references.
     private EditText mEmailView;
     private EditText mPasswordView;
@@ -54,14 +57,24 @@ public class LoginActivity extends AppCompatActivity {
     private String securityURL;
     private String authLoginURL;
     private String error;
+    private Button mEmailSignInButton;
 
     private String token;
     private PerformNetworkOperations performNetworkOperations;
+    private static LoginActivity instance;
 
+    public static LoginActivity getInstance() {
+        return instance;
+    }
+
+    public static void setInstance(LoginActivity instance) {
+        LoginActivity.instance = instance;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        setInstance(this);
         // Set up the login form.
         mEmailView = (EditText) findViewById(R.id.email);
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -71,7 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         logonURL = getResources().getString(R.string.logon_url);
         securityURL = getResources().getString(R.string.security_url);
         authLoginURL = getResources().getString(R.string.auth_login);
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         performNetworkOperations = new PerformNetworkOperations(this);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -91,9 +104,6 @@ public class LoginActivity extends AppCompatActivity {
      * errors are presented and no actual login attempt is made.
      */
     private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
 
         // Reset errors.
         mEmailView.setError(null);
@@ -138,182 +148,20 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    public void navigateActivity(List<String> nodeDataList, String emsIp) {
+        View view = mEmailSignInButton;
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(this, view, "transition");
+        int revealX = (int) (view.getX() + view.getWidth() / 2);
+        int revealY = (int) (view.getY() + view.getHeight() / 2);
 
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        Intent intent = new Intent(this, DemoLikeTumblrActivity.class);
+        intent.putExtra(DemoLikeTumblrActivity.EXTRA_CIRCULAR_REVEAL_X, revealX);
+        intent.putExtra(DemoLikeTumblrActivity.EXTRA_CIRCULAR_REVEAL_Y, revealY);
+        intent.putStringArrayListExtra("NodeData", (ArrayList<String>) nodeDataList);
+        intent.putExtra("EMSIP", emsIp);
+        ActivityCompat.startActivity(this, intent, options.toBundle());
     }
-
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, String> {
-
-        private final String mEmail;
-        private final String mEmsIp;
-        private final String mPassword;
-        //        OkHttpClient client = getUnsafeOkHttpClient(myCookieJar);
-        String resp;
-
-
-        UserLoginTask(String emsIp, String email, String password) {
-            mEmail = email;
-            mPassword = password;
-            mEmsIp = emsIp;
-//            myCookie=myCookieJar;
-
-        }
-
-        @Override
-        protected void onPreExecute() {
-            Toast.makeText(LoginActivity.this, "https://" + mEmsIp + authLoginURL + mEmail + mPassword, Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-//            try {
-//                // Simulate network access.
-////                Thread.sleep(2000);
-//                resp = getDataFromUrl("https://" + mEmsIp + securityURL,mEmail,mPassword);
-//                return resp;
-//            } catch (Exception e) {
-//                return e.toString();
-//            }
-
-//            RequestBody requestBody = new MultipartBody.Builder()
-////                    .setType(MultipartBody.FORM)
-//                    .addFormDataPart("username", mEmail)
-//                    .addFormDataPart("password", mPassword)
-//                    .build();
-////
-//            Request request_security = new Request.Builder()
-//                    .addHeader("Content-Type", " application/x-www-form-urlencoded")
-//                    .url("https://" + mEmsIp + authLoginURL)
-//                    .post(requestBody)
-//                    .build();
-////
-//            try {
-//                Response response = client.newCall(request_security).execute();
-////                return response.headers().get("Set-Cookie");
-//                String s= response.body().string();
-////                Log.d("Abhishek",response.headers().get("Set-Cookie"));
-//                return s;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//            Request request_logon = new Request.Builder()
-//                    .url("https://" + mEmsIp + logonURL)
-//                    .build();
-//
-//            try {
-//                Response response = client.newCall(request_logon).execute();
-////                return response.headers().get("Set-Cookie");
-////                String s= response.body().string();
-////                Log.d("Abhishek",response.headers().get("Set-Cookie"));
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            Request request_launch = new Request.Builder()
-//                    .url("https://" + mEmsIp + launchURL)
-//                    .build();
-//
-//            try {
-//                Response response = client.newCall(request_launch).execute();
-////                return response.headers().get("Set-Cookie");
-//
-////                String s= response.body().string();
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-
-//            Request request_getAuth = new Request.Builder()
-//                    .url("https://" + mEmsIp + getAuthURL)
-//                    .build();
-//
-//            try {
-//                Response response = client.newCall(request_getAuth).execute();
-//
-//                String s= response.body().string();
-//                return s;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-
-
-            return null;
-
-//            for (String credential : DUMMY_CREDENTIALS) {
-//                String[] pieces = credential.split(":");
-//                if (pieces[0].equals(mEmail)) {
-//                    // Account exists, return true if the password matches.
-//                    return pieces[1].equals(mPassword);
-//                }
-//            }
-
-            // TODO: register the new account here.
-//            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final String resp) {
-            mAuthTask = null;
-            showProgress(false);
-            Toast.makeText(LoginActivity.this, resp, Toast.LENGTH_SHORT).show();
-            Log.d("Abhishek", resp);
-//            Log.d("Abhishek", myCookieJar.showCookies());
-//            if (success) {
-//                finish();
-//            } else {
-//                mPasswordView.setError(getString(R.string.error_incorrect_password));
-//                mPasswordView.requestFocus();
-//            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
-    }
-
 
 }
 
