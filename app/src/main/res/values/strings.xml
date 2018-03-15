@@ -20,6 +20,7 @@
     <string name="auth_session">/emxAuth/auth/getAuthSession</string>
     <string name="auth_login">/emxAuth/auth/login</string>
     <string name="fetch_nodes">/nodeMgmt/v1.0/nodes</string>
+    <string name="fetch_emsnodes">/mobileems/nodelist</string>
 
     <string name="reverse">Reverse</string>
 

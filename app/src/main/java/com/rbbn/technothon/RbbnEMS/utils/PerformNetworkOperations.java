@@ -33,6 +33,7 @@ public class PerformNetworkOperations {
     String token;
     private String authLoginURL;
     protected String fetchNodesURL;
+    protected String emsNodesURL;
     private String dataResponse;
 
 
@@ -40,6 +41,7 @@ public class PerformNetworkOperations {
         this.ctx = ctx;
         authLoginURL = ctx.getResources().getString(R.string.auth_login);
         fetchNodesURL = ctx.getResources().getString(R.string.fetch_nodes);
+        emsNodesURL = ctx.getResources().getString(R.string.fetch_emsnodes);
     }
 
     public void doLogin(final String emsIP, final String username, final String password) {
@@ -63,8 +65,8 @@ public class PerformNetworkOperations {
                         if (token == null) {
                             Toast.makeText(ctx, "Unable to fetch Login Token", Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(ctx, "Successfully Logged In" + token, Toast.LENGTH_LONG).show();
-                            getNodesList(emsIP, token);
+                            Toast.makeText(ctx, "Successfully Logged In", Toast.LENGTH_LONG).show();
+                            getEmsList(emsIP, token);
                             Log.d("Abhishek", token);
                         }
 
@@ -153,24 +155,23 @@ public class PerformNetworkOperations {
 
 
     public List<String> getEmsList(final String emsIp, final String mytoken) {
-        String getNodesUrl = gethttpsURL(emsIp, fetchNodesURL);
+        String getNodesUrl = gethttpURL(emsIp, emsNodesURL);
 
         StringRequest nodeRequest = new StringRequest(Request.Method.GET, getNodesUrl,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
+                        NetworkUtils.getInstance(ctx).hidepDialog();
                         Log.d("Abhishek", response);
                         try {
                             List<String> myList = new ArrayList<String>();
-                            JSONObject responseJson = new JSONObject(response);
-                            JSONArray myresponse = responseJson.getJSONArray("nodes");
+                            JSONArray myresponse = new JSONArray(response);
                             for (int i = 0; i < myresponse.length(); i++) {
                                 JSONObject jsonObject = myresponse.getJSONObject(i);
-                                myList.add(jsonObject.getString("name"));
+                                myList.add(jsonObject.getString("ip"));
                                 Log.d("Abhishek", myList.toString());
-                                LoginActivity.getInstance().navigateActivity(myList, emsIp);
                             }
+                            LoginActivity.getInstance().navigateActivity(myList, emsIp);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -180,21 +181,14 @@ public class PerformNetworkOperations {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-//                            showProgress(false);
+                        NetworkUtils.getInstance(ctx).hidepDialog();
                         // error
 //                        Log.d("Abhishek", String.valueOf(error.networkResponse.statusCode));
                         Toast.makeText(ctx, "Unable to get Node list", Toast.LENGTH_LONG).show();
                     }
                 }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("Authorization", mytoken);
-                return params;
-            }
-        };
-
+        );
+        NetworkUtils.getInstance(ctx).showpDialog();
         // Adding request to request queue
         NetworkUtils.getInstance(ctx).addToRequestQueue(nodeRequest);
         return null;
@@ -202,6 +196,10 @@ public class PerformNetworkOperations {
 
     public String gethttpsURL(String emsIp, String url) {
         return "https://" + emsIp + url;
+    }
+
+    public String gethttpURL(String emsIp, String url) {
+        return "http://" + emsIp + ":8999" + url;
     }
 
     class WaitforTask extends AsyncTask<CountDownLatch, Void, String> {
